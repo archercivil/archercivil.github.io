@@ -138,56 +138,162 @@
     </div>
   </div>
 
-  <script>
-    const f = document.getElementById("f");
-    const statusEl = document.getElementById("status");
-    const gpsBtn = document.getElementById("gpsBtn");
-    const gpsPill = document.getElementById("gpsPill");
+<script>
+  const f = document.getElementById("f");
+  const statusEl = document.getElementById("status");
+  const gpsBtn = document.getElementById("gpsBtn");
+  const gpsPill = document.getElementById("gpsPill");
 
-    // Default datetime-local to now
-    const dt = f.elements.dateTime;
-    const pad = (n) => String(n).padStart(2, "0");
-    const setNow = () => {
-      const now = new Date();
-      dt.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    };
-    setNow();
+  // Default datetime-local to now
+  const dt = f.elements.dateTime;
+  const pad = (n) => String(n).padStart(2, "0");
+  const setNow = () => {
+    const now = new Date();
+    dt.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  };
+  setNow();
 
-    // GPS capture
-    gpsBtn.addEventListener("click", async () => {
-      statusEl.textContent = "";
-      gpsPill.textContent = "GPS: requesting…";
+  // GPS capture
+  gpsBtn.addEventListener("click", () => {
+    statusEl.textContent = "";
+    gpsPill.textContent = "GPS: requesting…";
 
-      if (!navigator.geolocation) {
-        gpsPill.textContent = "GPS: not supported";
+    if (!navigator.geolocation) {
+      gpsPill.textContent = "GPS: not supported";
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        f.elements.gpsLat.value = String(latitude);
+        f.elements.gpsLon.value = String(longitude);
+        f.elements.gpsAcc.value = String(accuracy);
+        gpsPill.textContent = `GPS: captured (±${Math.round(accuracy)} m)`;
+      },
+      (err) => {
+        f.elements.gpsLat.value = "";
+        f.elements.gpsLon.value = "";
+        f.elements.gpsAcc.value = "";
+        gpsPill.textContent = "GPS: not captured";
+        statusEl.textContent = "GPS not available: " + err.message;
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  });
+
+  // Helpers
+  const getMultiSelect = (selectEl) =>
+    Array.from(selectEl.selectedOptions).map((o) => o.value);
+
+  const sanitize = (v) => (v == null ? "" : String(v)).trim();
+
+  const toNumberOrNull = (v) => {
+    const s = sanitize(v);
+    if (s === "") return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const buildPayload = () => ({
+    // Core fields
+    employeeName: sanitize(f.elements.employeeName.value),
+    project: f.elements.project.value,
+    equipment: f.elements.equipment.value,
+    hourMeter: f.elements.hourMeter.value, // server converts
+    managerComment: sanitize(f.elements.managerComment.value),
+
+    // Location
+    locationText: sanitize(f.elements.locationText.value),
+    describeLocation: sanitize(f.elements.describeLocation.value),
+
+    // GPS (hidden)
+    gpsLat: f.elements.gpsLat.value,
+    gpsLon: f.elements.gpsLon.value,
+    gpsAcc: f.elements.gpsAcc.value,
+
+    // Condition / defect reporting
+    defectsFound: getMultiSelect(f.elements.defectsFound),
+    describeEquipment: sanitize(f.elements.describeEquipment.value),
+    describeDefect: sanitize(f.elements.describeDefect.value),
+
+    // Client-side timestamp (optional; Notion still stores Created time)
+    dateTimeLocal: f.elements.dateTime.value
+  });
+
+  const validateClient = (p) => {
+    const missing = [];
+
+    if (!p.employeeName) missing.push("Employee Name");
+    if (!p.project) missing.push("Project");
+    if (!p.equipment) missing.push("Equipment");
+    if (!Array.isArray(p.defectsFound) || p.defectsFound.length === 0) missing.push("Defects Found?");
+
+    return missing;
+  };
+
+  const clearGps = () => {
+    f.elements.gpsLat.value = "";
+    f.elements.gpsLon.value = "";
+    f.elements.gpsAcc.value = "";
+    gpsPill.textContent = "GPS: not captured";
+  };
+
+  // Submit handler
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    statusEl.textContent = "Submitting…";
+
+    const payload = buildPayload();
+    const missing = validateClient(payload);
+
+    if (missing.length) {
+      statusEl.textContent =
+        "Missing required fields:\n- " + missing.join("\n- ");
+      return;
+    }
+
+    // Optional: warn if GPS looks invalid (does not block submission)
+    const lat = toNumberOrNull(payload.gpsLat);
+    const lon = toNumberOrNull(payload.gpsLon);
+    if ((payload.gpsLat || payload.gpsLon) && (lat === null || lon === null)) {
+      statusEl.textContent =
+        "GPS values look invalid. Tap Use GPS again or leave GPS blank and submit.\n";
+      return;
+    }
+
+    try {
+      const r = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const out = await r.json();
+
+      if (!r.ok || !out.ok) {
+        statusEl.textContent = "Error:\n" + JSON.stringify(out, null, 2);
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude, accuracy } = pos.coords;
-          f.elements.gpsLat.value = String(latitude);
-          f.elements.gpsLon.value = String(longitude);
-          f.elements.gpsAcc.value = String(accuracy);
-          gpsPill.textContent = `GPS: captured (±${Math.round(accuracy)} m)`;
-        },
-        (err) => {
-          f.elements.gpsLat.value = "";
-          f.elements.gpsLon.value = "";
-          f.elements.gpsAcc.value = "";
-          gpsPill.textContent = "GPS: not captured";
-          statusEl.textContent = "GPS not available: " + err.message;
-        },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-      );
-    });
+      const doNotOperate = !!out.doNotOperate;
 
-    // For now, prevent submit (Step 6 will wire /api/submit)
-    f.addEventListener("submit", (e) => {
-      e.preventDefault();
-      statusEl.textContent = "Form UI ready. Step 6 will connect this to Notion.";
+      statusEl.textContent =
+        "Submitted ✓\n" +
+        "Notion Page ID: " + out.id +
+        (doNotOperate ? "\n\nDO NOT OPERATE flagged." : "");
+
+      // Reset for next submission
+      f.reset();
+      setNow();
+      clearGps();
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-    });
-  </script>
+    } catch (err) {
+      statusEl.textContent = "Network error:\n" + String(err);
+    }
+  });
+</script>
+
 </body>
 </html>
+
