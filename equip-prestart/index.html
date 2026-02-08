@@ -10,30 +10,26 @@
 
   <style>
     :root{
-      --bg:#0b0f17;
-      --card:#0f1624;
-      --card2:#0c1320;
-      --text:#e8eefc;
-      --muted:#a9b6d1;
-      --line:rgba(255,255,255,0.10);
-      --line2:rgba(255,255,255,0.14);
-      --accent:#3b82f6;
-      --accent2:#60a5fa;
-      --danger:#ef4444;
-      --ok:#22c55e;
-      --warn:#f59e0b;
-      --shadow: 0 10px 40px rgba(0,0,0,0.35);
-      --radius: 18px;
+      --bg:#ffffff;
+      --card:#ffffff;
+      --text:#111111;
+      --muted:#5a5a5a;
+      --border:#7e7e7e;
+      --heading:#00007e;
+      --accent:#00007e;
+      --danger:#b91c1c;
+      --ok:#15803d;
+      --warn:#b45309;
+      --radius: 16px;
+      --shadow: 0 10px 26px rgba(0,0,0,0.08);
     }
 
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 800px at 10% 0%, rgba(59,130,246,0.18), transparent 60%),
-                  radial-gradient(1000px 700px at 90% 10%, rgba(96,165,250,0.14), transparent 55%),
-                  var(--bg);
+      background: var(--bg);
       color: var(--text);
     }
 
@@ -51,11 +47,11 @@
     }
 
     .logo{
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       border-radius: 12px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--line);
+      background: #fff;
+      border: 1px solid var(--border);
       display:flex;
       align-items:center;
       justify-content:center;
@@ -77,15 +73,18 @@
       gap: 2px;
       min-width: 0;
     }
-    .title{
+
+    h1{
       margin:0;
       font-size: 22px;
       letter-spacing: 0.2px;
-      line-height: 1.1;
+      line-height: 1.15;
+      color: var(--heading);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
     .subtitle{
       margin:0;
       color: var(--muted);
@@ -94,8 +93,8 @@
     }
 
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-      border: 1px solid var(--line);
+      background: var(--card);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
@@ -108,7 +107,7 @@
     .section{
       margin-top: 14px;
       padding-top: 14px;
-      border-top: 1px solid var(--line);
+      border-top: 1px solid var(--border);
     }
 
     .grid2{
@@ -124,15 +123,15 @@
     label{
       display:block;
       margin: 0 0 6px;
-      font-weight: 650;
+      font-weight: 700;
       font-size: 13px;
-      color: rgba(232,238,252,0.92);
+      color: var(--heading);
     }
 
     .field{
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--line2);
-      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
       padding: 12px;
       color: var(--text);
       width: 100%;
@@ -140,7 +139,12 @@
       outline: none;
     }
 
-    .field::placeholder{ color: rgba(169,182,209,0.75); }
+    .field:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,0,126,0.10);
+    }
+
+    .field::placeholder{ color: rgba(90,90,90,0.75); }
 
     textarea.field{ min-height: 92px; resize: vertical; }
 
@@ -165,8 +169,8 @@
       gap: 8px;
       border-radius: 999px;
       padding: 8px 12px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      background: #fff;
       font-size: 13px;
       color: var(--text);
       user-select: none;
@@ -176,7 +180,7 @@
       width: 10px;
       height: 10px;
       border-radius: 999px;
-      background: var(--muted);
+      background: #9ca3af;
     }
     .dot.ok{ background: var(--ok); }
     .dot.warn{ background: var(--warn); }
@@ -191,38 +195,43 @@
 
     .btn{
       width: 100%;
-      border: 0;
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 14px 14px;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--heading);
     }
+
     .btnPrimary{
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      color: #07101f;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
     }
+
     .btnGhost{
-      background: rgba(255,255,255,0.04);
-      color: var(--text);
-      border: 1px solid var(--line);
-      font-weight: 650;
+      background: #fff;
+      color: var(--heading);
+      border: 1px solid var(--border);
+      font-weight: 750;
     }
 
     .status{
       margin-top: 12px;
       white-space: pre-wrap;
       font-size: 13px;
-      color: rgba(232,238,252,0.95);
+      color: var(--text);
     }
 
     .req{
-      color: rgba(232,238,252,0.9);
-      font-weight: 750;
+      color: var(--heading);
+      font-weight: 800;
     }
     .req::after{
       content:" *";
-      color: var(--warn);
+      color: var(--accent);
       font-weight: 900;
     }
 
@@ -258,7 +267,7 @@
         <img src="/archer-logo.png" alt="Archer Civil" onerror="this.style.display='none';" />
       </div>
       <div class="titleBlock">
-        <h1 class="title">Daily Pre-Start Inspection</h1>
+        <h1>Daily Pre-Start Inspection</h1>
         <p class="subtitle">GPS auto-captures when available. If not, a mappable address is required.</p>
       </div>
     </div>
@@ -384,10 +393,8 @@
     const f = document.getElementById("f");
     const statusEl = document.getElementById("status");
 
-    const gpsPill = document.getElementById("gpsPill");
     const gpsText = document.getElementById("gpsText");
     const gpsDot = document.getElementById("gpsDot");
-
     const retryGpsBtn = document.getElementById("retryGpsBtn");
     const clearGpsBtn = document.getElementById("clearGpsBtn");
 
@@ -405,7 +412,6 @@
     setNow();
 
     const setGpsUi = (state, msg) => {
-      // state: "ok" | "warn" | "bad"
       gpsDot.className = "dot " + (state || "");
       gpsText.textContent = msg || "";
     };
@@ -458,15 +464,13 @@
         },
         (err) => {
           clearGps();
-          // Make the reason visible but keep it short
           statusEl.textContent = "GPS not available. Enter an address for the map pin.\n" + err.message;
         },
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
       );
     };
 
-    // Auto-capture GPS on load (what you requested)
-    // Small delay helps iOS render before location prompt
+    // Auto-capture GPS on load
     window.addEventListener("load", () => {
       setTimeout(() => captureGps(), 350);
     });
@@ -477,18 +481,12 @@
       addressField.focus();
     });
 
-    // Keep address requirement in sync if user clears GPS manually
-    addressField.addEventListener("input", () => {
-      // no-op, but keeps form validation friendly
-    });
-
     // Helpers
     const sanitize = (v) => (v == null ? "" : String(v)).trim();
     const getMultiSelect = (selectEl) =>
       Array.from(selectEl.selectedOptions).map((o) => o.value);
 
     const looksMappable = (addr) => {
-      // Lightweight check: contains at least one digit and at least 2 words
       const a = sanitize(addr);
       if (a.length < 8) return false;
       const hasDigit = /\d/.test(a);
@@ -503,7 +501,6 @@
       hourMeter: f.elements.hourMeter.value,
       managerComment: sanitize(f.elements.managerComment.value),
 
-      // Address for pin (your "Location" field in Notion)
       locationText: sanitize(f.elements.locationText.value),
       describeLocation: sanitize(f.elements.describeLocation.value),
 
@@ -533,7 +530,6 @@
 
       const payload = buildPayload();
 
-      // Base required fields
       const missing = validateClient(payload);
       if (missing.length) {
         statusEl.textContent = "Missing required fields:\n- " + missing.join("\n- ");
@@ -543,7 +539,6 @@
       // GPS or address requirement
       const gpsOk = hasGps();
       if (!gpsOk) {
-        // Demand an address usable by Google Maps for the pin
         if (!payload.locationText) {
           statusEl.textContent = "GPS not captured. Address for Map Pin is required.";
           addressField.focus();
@@ -579,6 +574,7 @@
         f.reset();
         setNow();
         setGpsUi("warn", "GPS: attempting…");
+        requireAddress(true);
 
         // Re-attempt GPS automatically for next submission
         setTimeout(() => captureGps(), 350);
