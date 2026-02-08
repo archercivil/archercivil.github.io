@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Pre-Start Inspection</title>
+  <style>
+    :root { --radius: 14px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 18px; }
+    .wrap { max-width: 820px; margin: 0 auto; }
+    .card { border: 1px solid #ddd; border-radius: var(--radius); padding: 18px; }
+    h1 { margin: 0 0 8px 0; font-size: 24px; }
+    .sub { margin: 0 0 14px 0; color: #444; }
+    label { display:block; margin-top: 12px; font-weight: 650; }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border-radius: 12px;
+      border: 1px solid #cfcfcf;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    textarea { resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 720px) { .row { grid-template-columns: 1fr; } }
+    .btns { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    button {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #cfcfcf;
+      background: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button.primary { border: 0; background: #111; color: #fff; }
+    .status { margin-top: 12px; white-space: pre-wrap; }
+    .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; border: 1px solid #ddd; font-size: 13px; color: #333; }
+    .muted { color: #666; font-size: 13px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Daily Pre-Start Inspection</h1>
+      <p class="sub">Submit one inspection record per equipment check.</p>
+
+      <form id="f">
+        <div class="row">
+          <div>
+            <label>Date & Time</label>
+            <input name="dateTime" type="datetime-local" required />
+            <div class="muted">Auto-fills to current time. Notion will also store Created Time.</div>
+          </div>
+          <div>
+            <label>Employee Name</label>
+            <input name="employeeName" type="text" placeholder="First Last" required />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Project</label>
+            <select name="project" required>
+              <option value="">Select…</option>
+              <option>Not Listed Below</option>
+              <option>25020 G&J Heavy Haul Yard</option>
+              <option>25021 Crystal Cave Repairs</option>
+              <option>25022 Hanford 12th &amp; Hume</option>
+              <option>25023 Henry Miller Ditch Lining</option>
+              <option>25027 Los Banos WWTP</option>
+              <option>25028 Tulare K Street</option>
+              <option>25029 Los Banos Basin Capture</option>
+              <option>25033 Madera Levee Patrol</option>
+            </select>
+          </div>
+          <div>
+            <label>Equipment</label>
+            <select name="equipment" required>
+              <option value="">Select…</option>
+              <option>Not Listed Below</option>
+              <option>1055-1</option><option>1055-2</option><option>1055P-1</option>
+              <option>10R-1</option><option>10R-2</option><option>10F-1</option>
+              <option>12000-1</option><option>12000-2</option><option>12000-3</option><option>12000-4</option>
+              <option>12-1</option><option>150-1</option><option>15R-1</option><option>22R-1</option><option>289-1</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Hour Meter</label>
+            <input name="hourMeter" type="number" min="0" step="1" placeholder="0" />
+          </div>
+          <div>
+            <label>Manager Comment (record title)</label>
+            <input name="managerComment" type="text" placeholder="AM check / New submission / short note" />
+          </div>
+        </div>
+
+        <label>Location (manual backup)</label>
+        <input name="locationText" type="text" placeholder="Yard / cross street / station / etc." />
+
+        <label>Describe Location</label>
+        <textarea name="describeLocation" rows="3" placeholder="Gate, stationing, north side of yard, etc."></textarea>
+
+        <div class="btns">
+          <button type="button" id="gpsBtn">Use GPS</button>
+          <span class="pill" id="gpsPill">GPS: not captured</span>
+        </div>
+        <div class="muted">If GPS is denied/unavailable, submit still works with manual location.</div>
+
+        <!-- Hidden GPS fields -->
+        <input type="hidden" name="gpsLat" />
+        <input type="hidden" name="gpsLon" />
+        <input type="hidden" name="gpsAcc" />
+
+        <label>Defects Found?</label>
+        <select name="defectsFound" multiple size="3" required>
+          <option>No. Safe to Operate.</option>
+          <option>Yes. Safe to Operate.</option>
+          <option>Yes. DO NOT OPERATE.</option>
+        </select>
+        <div class="muted">You can select more than one if needed.</div>
+
+        <label>Describe Equipment</label>
+        <textarea name="describeEquipment" rows="3" placeholder="Attachments, configuration, observations."></textarea>
+
+        <label>Describe Defect</label>
+        <textarea name="describeDefect" rows="4" placeholder="Describe any defect or issue."></textarea>
+
+        <div class="btns">
+          <button class="primary" type="submit">Submit</button>
+        </div>
+
+        <div class="status" id="status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const f = document.getElementById("f");
+    const statusEl = document.getElementById("status");
+    const gpsBtn = document.getElementById("gpsBtn");
+    const gpsPill = document.getElementById("gpsPill");
+
+    // Default datetime-local to now
+    const dt = f.elements.dateTime;
+    const pad = (n) => String(n).padStart(2, "0");
+    const setNow = () => {
+      const now = new Date();
+      dt.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    };
+    setNow();
+
+    // GPS capture
+    gpsBtn.addEventListener("click", async () => {
+      statusEl.textContent = "";
+      gpsPill.textContent = "GPS: requesting…";
+
+      if (!navigator.geolocation) {
+        gpsPill.textContent = "GPS: not supported";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude, accuracy } = pos.coords;
+          f.elements.gpsLat.value = String(latitude);
+          f.elements.gpsLon.value = String(longitude);
+          f.elements.gpsAcc.value = String(accuracy);
+          gpsPill.textContent = `GPS: captured (±${Math.round(accuracy)} m)`;
+        },
+        (err) => {
+          f.elements.gpsLat.value = "";
+          f.elements.gpsLon.value = "";
+          f.elements.gpsAcc.value = "";
+          gpsPill.textContent = "GPS: not captured";
+          statusEl.textContent = "GPS not available: " + err.message;
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      );
+    });
+
+    // For now, prevent submit (Step 6 will wire /api/submit)
+    f.addEventListener("submit", (e) => {
+      e.preventDefault();
+      statusEl.textContent = "Form UI ready. Step 6 will connect this to Notion.";
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
+  </script>
+</body>
+</html>
