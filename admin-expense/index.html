@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#01017C" />
+  <title>Archer Civil Construction – Expense Submission</title>
+
+  <!-- App / browser icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/admin-expense/favicon-180x180.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/admin-expense/favicon-180x180.png">
+  <meta name="apple-mobile-web-app-title" content="Expense">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+
+  <style>
+    :root{
+      /* Archer logo accents */
+      --archer-blue: #00007E;
+      --archer-gray: #7E7E7E;
+
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: rgba(1,1,124,.20);
+      --shadow: 0 10px 24px rgba(2,6,23,.08);
+      --radius: 16px;
+
+      --tap: 52px;
+      --pad: 14px;
+      --gap: 12px;
+
+      /* Field response size: match the "Upload Photo" button text */
+      /* iOS Safari zooms inputs if font-size < 16px, so keep at 16px */
+      --field-font-size: 14px;
+      --button-font-size: 14px;
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      line-height: 1.25;
+      -webkit-text-size-adjust: 100%;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* iPhone/iPad consistency + field response font */
+    input, select, textarea{
+      display:block;
+      width:100%;
+      max-width:100%;
+      text-align:left;
+
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                   "Liberation Mono", "Courier New", monospace;
+
+      /* Force field response size to match Upload Photo button */
+      font-size: var(--field-font-size);
+      line-height: 1.25;
+    }
+
+    /* Unified geometry for inputs */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea{
+      height: var(--tap);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 0 var(--pad);
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea{
+      min-height: 110px;
+      height: auto;
+      padding: 12px var(--pad);
+      resize: vertical;
+    }
+
+    input[type="number"]{ appearance: textfield; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(1,1,124,.55);
+      box-shadow: 0 0 0 4px rgba(1,1,124,.12);
+    }
+
+    /* iOS date: left align + vertical center */
+    input[type="date"]{
+      -webkit-appearance: none;
+      appearance: none;
+      padding: 0 var(--pad);
+      line-height: var(--tap);
+      text-align: left;
+      background-clip: padding-box;
+      font-size: var(--field-font-size);
+    }
+    input[type="date"]::-webkit-date-and-time-value{
+      height: var(--tap);
+      line-height: var(--tap);
+      margin: 0;
+      padding: 0;
+      text-align: left;
+      display: block;
+      font-size: var(--field-font-size);
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator{
+      margin: 0;
+      padding: 0;
+    }
+
+    .wrap{
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 18px 14px 40px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0 14px;
+    }
+
+    .logo{
+      width: min(420px, 92vw);
+      height: auto;
+      display:block;
+    }
+
+    .card{
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      background: #fff;
+    }
+
+    .title{
+      font-size: 1.15rem;
+      color: var(--archer-blue);
+      margin: 0 0 6px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .subtitle{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: .95rem;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .grid{ display:grid; gap: var(--gap); }
+
+    label{
+      display:block;
+      font-size: .92rem;
+      margin: 0 0 6px;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .hint{
+      display:block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: .86rem;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+      align-items: start;
+    }
+    @media (max-width: 520px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    .requiredTag{
+      display:inline-block;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: .75rem;
+      color: var(--archer-blue);
+      border: 1px solid rgba(1,1,124,.28);
+      background: rgba(1,1,124,.06);
+      vertical-align: middle;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .photoBox{
+      border: 1px dashed rgba(1,1,124,.35);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(1,1,124,.03);
+    }
+
+    .photoActions{
+      display:flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn{
+      height: var(--tap);
+      border-radius: 14px;
+      border: 1px solid rgba(1,1,124,.35);
+      padding: 0 14px;
+
+      /* Match the field response sizing */
+      font-size: var(--button-font-size);
+      line-height: 1.2;
+
+      cursor: pointer;
+      background: #fff;
+      color: var(--archer-blue);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .btnPrimary{
+      background: var(--archer-blue);
+      border-color: var(--archer-blue);
+      color: #fff;
+      width: 100%;
+      font-weight: 600;
+    }
+
+    .btnGhost{ background: #fff; color: var(--archer-blue); }
+
+    .pillGroup{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pill{
+      border: 1px solid rgba(1,1,124,.35);
+      background: #fff;
+      color: var(--archer-blue);
+      height: 46px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: var(--button-font-size);
+      cursor: pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    .pill[aria-pressed="true"]{
+      background: rgba(1,1,124,.10);
+      border-color: rgba(1,1,124,.70);
+      box-shadow: 0 0 0 4px rgba(1,1,124,.10);
+    }
+
+    .preview{ margin-top: 10px; display:none; }
+    .preview img{
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background:#fff;
+    }
+
+    .otherInput{ margin-top: 10px; }
+
+    .error{
+      display:none;
+      border-left: 4px solid #b91c1c;
+      background: #fef2f2;
+      color: #7f1d1d;
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin: 10px 0 0;
+      font-size: .95rem;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .success{
+      display:none;
+      text-align:center;
+      padding: 20px 12px;
+    }
+    .check{
+      width: 62px;
+      height: 62px;
+      border-radius: 999px;
+      margin: 0 auto 10px;
+      background: rgba(1,1,124,.10);
+      border: 1px solid rgba(1,1,124,.25);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--archer-blue);
+      font-size: 34px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .fineprint{
+      margin-top: 14px;
+      text-align: center;
+      font-size: .86rem;
+      color: var(--muted); /* gray instruction text */
+      line-height: 1.4;
+    }
+    
+    .fineprint a{
+      color: var(--archer-blue); /* blue phone number */
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap; /* prevents line break on number */
+    }
+    
+    .fineprint a:active{
+      opacity: 0.7;
+    }
+
+    .hidden{ display:none !important; }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+    <section class="brand" aria-label="Archer Civil Construction LLC">
+      <img class="logo" src="archer_logo.png" alt="Archer Civil Construction LLC logo">
+    </section>
+
+    <section class="card" id="formCard">
+      <div id="formHeader">
+        <p class="title"><strong>Expense Submission</strong></p>
+        <p class="subtitle">Upload photo, complete form, and submit.</p>
+      </div>
+
+      <form id="expenseForm" class="grid" novalidate>
+        <div class="photoBox">
+          <label for="receipt">
+            Receipt photo <span class="requiredTag">Required</span>
+          </label>
+
+          <div class="photoActions">
+            <button type="button" class="btn btnGhost" id="takePhotoBtn">Upload Photo</button>
+            <span class="hint">On iPhone, this opens the camera. On Android, camera or gallery.</span>
+          </div>
+
+          <input
+            id="receipt"
+            name="receipt"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            class="hidden"
+            required
+          />
+
+          <div class="preview" id="preview">
+            <img id="previewImg" alt="Receipt preview">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="project">
+              Project <span class="requiredTag">Required</span>
+            </label>
+            <select id="project" name="project" required>
+              <option value="" selected disabled>Select a project</option>
+              <option value="Office / Non-Project">Office / Non-Project</option>
+              <option value="K Street Reconstruction">K Street Reconstruction</option>
+              <option value="Hanford 12th and Hume">Hanford 12th and Hume</option>
+              <option value="Crystal Cave Road">Crystal Cave Road</option>
+              <option value="Henry Miller Ditch Lining">Henry Miller Ditch Lining</option>
+              <option value="Los Banos Basin Capture">Los Banos Basin Capture</option>
+              <option value="Los Banos WWTP P2">Los Banos WWTP P2</option>
+              <option value="Madera Levee Roads">Madera Levee Roads</option>
+              <option value="Other">Other</option>
+            </select>
+            <input id="projectOther" name="projectOther" type="text" placeholder="Enter project name" class="hidden otherInput" />
+          </div>
+
+          <div>
+            <label for="category">
+              Category <span class="requiredTag">Required</span>
+            </label>
+            <select id="category" name="category" required>
+              <option value="" selected disabled>Select a category</option>
+              <option value="Fuel">Fuel</option>
+              <option value="Meals">Meals</option>
+              <option value="Parts">Parts</option>
+              <option value="Lodging">Lodging</option>
+              <option value="Supplies">Supplies</option>
+              <option value="Tools">Tools</option>
+              <option value="Equipment Rental">Equipment Rental</option>
+              <option value="Misc">Misc</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="vendor">
+            Vendor <span class="requiredTag">Required</span>
+          </label>
+          <select id="vendor" name="vendor" required>
+            <option value="" selected disabled>Select a vendor</option>
+            <option value="Fuel Station">Fuel Station</option>
+            <option value="Restaurant">Restaurant</option>
+            <option value="Parts Supplier">Parts Supplier</option>
+            <option value="Hardware Store">Hardware Store</option>
+            <option value="Hotel">Hotel</option>
+            <option value="Rental Company">Rental Company</option>
+            <option value="Other">Other</option>
+          </select>
+          <input id="vendorOther" name="vendorOther" type="text" placeholder="Enter vendor name" class="hidden otherInput" />
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="amount">
+              Amount <span class="requiredTag">Required</span>
+            </label>
+            <input id="amount" name="amount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="e.g. 47.82" required />
+          </div>
+
+          <div>
+            <label for="expenseDate">
+              Expense date <span class="requiredTag">Required</span>
+            </label>
+            <input id="expenseDate" name="expenseDate" type="date" required />
+          </div>
+        </div>
+
+        <div>
+          <label>
+            Payment method <span class="requiredTag">Required</span>
+          </label>
+          <div class="pillGroup" role="group" aria-label="Payment method">
+            <button type="button" class="pill" data-pay="Company Card" aria-pressed="false">Company Card</button>
+            <button type="button" class="pill" data-pay="Personal Card" aria-pressed="false">Personal Card</button>
+            <button type="button" class="pill" data-pay="Other" aria-pressed="false">Other</button>
+          </div>
+          <input id="paymentMethod" name="paymentMethod" type="text" class="hidden" required />
+          <input id="paymentOther" name="paymentOther" type="text" placeholder="Enter payment details" class="hidden otherInput" />
+        </div>
+
+        <div>
+          <label for="notes">Notes</label>
+          <textarea id="notes" name="notes" placeholder="Employee name required. Optional: cost code, reason, who approved, etc."></textarea>
+          <span class="hint"> </span>
+        </div>
+
+        <input type="hidden" id="submittedBy" name="submittedBy" value="" />
+        <input type="hidden" id="source" name="source" value="qr-html" />
+
+        <div class="error" id="errorBox" role="alert"></div>
+
+        <button type="submit" class="btn btnPrimary" id="submitBtn">Submit</button>
+
+        <div class="fineprint">
+          If you experience any issues with this form, please call&nbsp;
+          <a href="tel:+15593721838" aria-label="Call Main Office">
+            (559) 372-1838
+          </a>
+        </div>
+
+      </form>
+
+      <div class="success" id="successBox" aria-live="polite">
+        <div class="check">✔</div>
+        <p class="title"><strong>Expense submitted</strong></p>
+        <p class="subtitle">Thanks — you’re done.</p>
+        <button type="button" class="btn btnGhost" id="submitAnotherBtn">Submit another</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const SUBMIT_ENDPOINT = "https://expense-intake-backend.vercel.app/api/submit-expense";
+    const $ = (id) => document.getElementById(id);
+
+    function getParam(name){
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || "";
+    }
+
+    function setError(msg){
+      const box = $("errorBox");
+      box.textContent = msg;
+      box.style.display = "block";
+      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function clearError(){
+      const box = $("errorBox");
+      box.textContent = "";
+      box.style.display = "none";
+    }
+
+    function todayISO(){
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function resetPills(){
+      document.querySelectorAll(".pill[data-pay]").forEach(b => b.setAttribute("aria-pressed", "false"));
+    }
+
+    (function init(){
+      $("expenseDate").value = todayISO();
+
+      const projectParam = getParam("project");
+      const userParam = getParam("user");
+      if (userParam) $("submittedBy").value = userParam;
+
+      if (projectParam){
+        const projectSelect = $("project");
+        const optionExists = Array.from(projectSelect.options).some(o => o.value === projectParam);
+
+        if (optionExists){
+          projectSelect.value = projectParam;
+          projectSelect.disabled = true;
+        } else {
+          $("project").value = "Other";
+          $("projectOther").classList.remove("hidden");
+          $("projectOther").value = projectParam;
+        }
+      }
+    })();
+
+    $("takePhotoBtn").addEventListener("click", () => $("receipt").click());
+
+    $("receipt").addEventListener("change", () => {
+      clearError();
+      const file = $("receipt").files && $("receipt").files[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      $("previewImg").src = url;
+      $("preview").style.display = "block";
+    });
+
+    $("vendor").addEventListener("change", () => {
+      const isOther = $("vendor").value === "Other";
+      $("vendorOther").classList.toggle("hidden", !isOther);
+      if (!isOther) $("vendorOther").value = "";
+    });
+
+    $("project").addEventListener("change", () => {
+      const isOther = $("project").value === "Other";
+      $("projectOther").classList.toggle("hidden", !isOther);
+      if (!isOther) $("projectOther").value = "";
+    });
+
+    document.querySelectorAll(".pill[data-pay]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        clearError();
+        resetPills();
+        btn.setAttribute("aria-pressed", "true");
+
+        const value = btn.getAttribute("data-pay");
+        $("paymentMethod").value = value;
+
+        const isOther = value === "Other";
+        $("paymentOther").classList.toggle("hidden", !isOther);
+        if (!isOther) $("paymentOther").value = "";
+      });
+    });
+
+    function validate(){
+      clearError();
+
+      const receipt = $("receipt").files && $("receipt").files[0];
+      if (!receipt) return "Please add a receipt photo to continue.";
+
+      const projectValue = $("project").disabled ? $("project").value : $("project").value;
+      if (!projectValue) return "Please select a project.";
+      if (projectValue === "Other" && !$("projectOther").value.trim()){
+        return "Please enter the project name.";
+      }
+
+      const category = $("category").value;
+      if (!category) return "Please select a category.";
+
+      const vendorValue = $("vendor").value;
+      if (!vendorValue) return "Please select a vendor.";
+      if (vendorValue === "Other" && !$("vendorOther").value.trim()){
+        return "Please enter the vendor name.";
+      }
+
+      const amount = $("amount").value;
+      if (!amount || Number(amount) <= 0) return "Please enter the amount.";
+
+      const expenseDate = $("expenseDate").value;
+      if (!expenseDate) return "Please enter the expense date.";
+
+      const pay = $("paymentMethod").value.trim();
+      if (!pay) return "Please select a payment method.";
+      if (pay === "Other" && !$("paymentOther").value.trim()){
+        return "Please enter the payment method details.";
+      }
+
+      const notes = $("notes").value.trim();
+      if (!notes) return "Please enter employee name in Notes.";
+
+      return "";
+    }
+
+    $("expenseForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const err = validate();
+      if (err){
+        setError(err);
+        return;
+      }
+
+      $("submitBtn").disabled = true;
+      $("submitBtn").textContent = "Submitting…";
+
+      try{
+        const receiptFile = $("receipt").files[0];
+        const fd = new FormData();
+        fd.append("receipt", receiptFile);
+
+        const projectValue = $("project").disabled ? $("project").value : $("project").value;
+        const projectFinal = (projectValue === "Other") ? $("projectOther").value.trim() : projectValue;
+
+        const vendorValue = $("vendor").value;
+        const vendorFinal = (vendorValue === "Other") ? $("vendorOther").value.trim() : vendorValue;
+
+        const paymentValue = $("paymentMethod").value;
+        const paymentFinal = (paymentValue === "Other") ? $("paymentOther").value.trim() : paymentValue;
+
+        fd.append("project", projectFinal);
+        fd.append("category", $("category").value);
+        fd.append("vendor", vendorFinal);
+        fd.append("amount", $("amount").value);
+        fd.append("expenseDate", $("expenseDate").value);
+        fd.append("paymentMethod", paymentFinal);
+        fd.append("notes", $("notes").value || "");
+        fd.append("submittedBy", $("submittedBy").value || "");
+        fd.append("source", $("source").value);
+
+        const res = await fetch(SUBMIT_ENDPOINT, { method: "POST", body: fd });
+
+        if (!res.ok){
+          let msg = "Submission failed. Please try again.";
+          try{
+            const data = await res.json();
+            if (data && data.error) msg = data.error;
+          }catch(_){}
+          throw new Error(msg);
+        }
+
+        $("expenseForm").classList.add("hidden");
+        $("formHeader").classList.add("hidden");
+        $("successBox").style.display = "block";
+
+      }catch(ex){
+        setError(ex.message || "Submission failed. Please try again.");
+      }finally{
+        $("submitBtn").disabled = false;
+        $("submitBtn").textContent = "Submit";
+      }
+    });
+
+    $("submitAnotherBtn").addEventListener("click", () => {
+      const lockedProject = $("project").disabled ? $("project").value : "";
+
+      $("expenseForm").reset();
+      clearError();
+
+      $("preview").style.display = "none";
+      $("successBox").style.display = "none";
+      $("expenseForm").classList.remove("hidden");
+      $("formHeader").classList.remove("hidden");
+
+      resetPills();
+      $("paymentMethod").value = "";
+      $("paymentOther").classList.add("hidden");
+      $("vendorOther").classList.add("hidden");
+      $("projectOther").classList.add("hidden");
+
+      $("expenseDate").value = todayISO();
+
+      if (lockedProject){
+        $("project").value = lockedProject;
+      }
+    });
+  </script>
+</body>
+</html>
