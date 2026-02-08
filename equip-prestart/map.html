@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Equipment Map</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #fff; }
     .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
     .card { border: 1px solid #ddd; border-radius: 14px; padding: 16px; }
     h1 { margin: 0 0 10px 0; font-size: 22px; }
     .sub { margin: 0 0 14px 0; color: #444; }
     label { display:block; margin-top: 10px; font-weight: 650; }
-    input, select, button {
+    input, button {
       width: 100%;
       padding: 12px;
       margin-top: 6px;
@@ -20,19 +20,20 @@
       font-size: 16px;
       box-sizing: border-box;
     }
-    button { cursor: pointer; background: #111; color: #fff; border: 0; }
+    button { cursor: pointer; border: 0; }
+    button.primary { background: #111; color: #fff; }
     button.secondary { background: #fff; color: #111; border: 1px solid #cfcfcf; }
-    .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 820px) { .row { grid-template-columns: 1fr; } }
     .status { margin-top: 12px; white-space: pre-wrap; color: #333; }
-    #map { height: 70vh; border-radius: 14px; border: 1px solid #ddd; }
+    #map { height: 70vh; border-radius: 14px; border: 1px solid #ddd; background: #f3f3f3; }
     .topbar { display:flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 12px; }
     .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; border: 1px solid #ddd; font-size: 13px; color: #333; }
     .hidden { display: none !important; }
+    @media (max-width: 820px) { #map { height: 64vh; } }
   </style>
 </head>
 <body>
   <div class="wrap">
+
     <div id="loginCard" class="card">
       <h1>Equipment Map</h1>
       <p class="sub">Enter the 4-digit passcode to view equipment locations.</p>
@@ -40,7 +41,7 @@
       <form id="loginForm">
         <label>Passcode</label>
         <input id="passcode" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 digits" required />
-        <button type="submit">View Map</button>
+        <button class="primary" type="submit">View Map</button>
         <div class="status" id="loginStatus"></div>
       </form>
     </div>
@@ -55,6 +56,7 @@
       <div id="map"></div>
       <div class="status" id="mapStatus"></div>
     </div>
+
   </div>
 
   <script>
@@ -71,6 +73,7 @@
 
     let map;
     let markers = [];
+    let googleReady = false;
 
     const showLogin = () => {
       loginCard.classList.remove("hidden");
@@ -80,9 +83,20 @@
       passcodeEl.focus();
     };
 
-    const showMap = () => {
+    const showMapShell = () => {
       loginCard.classList.add("hidden");
       mapCard.classList.remove("hidden");
+    };
+
+    const escapeHtml = (s) =>
+      String(s || "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      }[c]));
+
+    const formatWhen = (iso) => {
+      if (!iso) return "";
+      const d = new Date(iso);
+      return d.toLocaleString();
     };
 
     const postLogin = async (passcode) => {
@@ -95,9 +109,8 @@
       return { status: r.status, out };
     };
 
-    const clearMarkers = () => {
-      for (const m of markers) m.setMap(null);
-      markers = [];
+    const doLogout = async () => {
+      try { await fetch("/api/logout"); } catch (e) {}
     };
 
     const fetchPins = async () => {
@@ -106,16 +119,16 @@
       return { status: r.status, out };
     };
 
-    const formatWhen = (iso) => {
-      if (!iso) return "";
-      const d = new Date(iso);
-      return d.toLocaleString();
+    const clearMarkers = () => {
+      for (const m of markers) m.setMap(null);
+      markers = [];
     };
 
     const initMapIfNeeded = () => {
       if (map) return;
+
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 36.33, lng: -119.29 }, // Visalia-ish default
+        center: { lat: 36.33, lng: -119.29 }, // default center
         zoom: 9,
         mapTypeControl: false,
         streetViewControl: false,
@@ -138,8 +151,11 @@
         const pos = { lat: p.lat, lng: p.lon };
         bounds.extend(pos);
 
-        const title = `${p.equipment || "Unknown"}${p.project ? " — " + p.project : ""}`;
-        const marker = new google.maps.Marker({ position: pos, map, title });
+        const marker = new google.maps.Marker({
+          position: pos,
+          map,
+          title: `${p.equipment || "Unknown"}`
+        });
 
         const info = new google.maps.InfoWindow({
           content: `
@@ -166,11 +182,6 @@
       mapStatus.textContent = "";
     };
 
-    const escapeHtml = (s) =>
-      String(s || "").replace(/[&<>"']/g, (c) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-      }[c]));
-
     const loadPinsFlow = async () => {
       mapStatus.textContent = "Loading pins…";
       const { status, out } = await fetchPins();
@@ -185,16 +196,29 @@
         return;
       }
 
+      if (!googleReady) {
+        mapStatus.textContent = "Google Maps is still loading…";
+        return;
+      }
+
       initMapIfNeeded();
       renderPins(out.pins || []);
     };
 
+    // Called by Google Maps script callback
+    window.__bootMap = async () => {
+      googleReady = true;
+      // If the user is already authorized, show map and load pins.
+      showMapShell();
+      await loadPinsFlow();
+    };
+
+    // Login form submit
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       loginStatus.textContent = "Checking…";
 
       const code = (passcodeEl.value || "").trim();
-
       const { status, out } = await postLogin(code);
 
       if (status !== 200 || !out.ok) {
@@ -203,7 +227,7 @@
       }
 
       loginStatus.textContent = "";
-      showMap();
+      showMapShell();
       await loadPinsFlow();
     });
 
@@ -212,26 +236,42 @@
     });
 
     logoutBtn.addEventListener("click", async () => {
-      await fetch("/api/logout");
+      await doLogout();
       showLogin();
     });
 
-    // Try to load pins immediately; if unauthorized, it will show login.
-    const boot = async () => {
-      showMap();
-      await loadPinsFlow();
-    };
+    // Load Google Maps JS dynamically using /api/config
+    async function loadGoogleMapsScript() {
+      mapStatus.textContent = "Loading Google Maps…";
 
-    window.__bootMap = boot;
-  </script>
+      const r = await fetch("/api/config");
+      const cfg = await r.json();
 
-  <!-- Google Maps loader -->
-  <script src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_MAPS_API_KEY}}&callback=__bootMap" async defer></script>
+      if (!cfg.ok || !cfg.googleMapsKey) {
+        mapStatus.textContent = "Missing Google Maps API key.";
+        showMapShell();
+        return;
+      }
 
-  <script>
-    // Inject the key from Vercel at runtime:
-    // Vercel doesn't template static HTML, so we rewrite the script src using the env var via /api approach in Step 10.
-    // For now, this placeholder will be replaced in Step 10.
+      const s = document.createElement("script");
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(cfg.googleMapsKey)}&callback=__bootMap`;
+      s.async = true;
+      s.defer = true;
+
+      s.onerror = () => {
+        showMapShell();
+        mapStatus.textContent = "Google Maps failed to load. Check API key restrictions in Google Cloud.";
+      };
+
+      document.head.appendChild(s);
+    }
+
+    // Boot: try to show map if already authed; otherwise show login.
+    (async () => {
+      showMapShell();
+      await loadPinsFlow(); // if 401, will switch to login
+      await loadGoogleMapsScript();
+    })();
   </script>
 </body>
 </html>
