@@ -29,7 +29,7 @@ export default async function handler(req, res) {
         ]
       },
       sorts: [
-        { property: "Created time", direction: "descending" }
+        { property: "Date & Time", direction: "descending" }
       ]
     };
 
@@ -91,3 +91,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: String(err) });
   }
 }
+
